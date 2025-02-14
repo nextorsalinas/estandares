@@ -40,11 +40,12 @@ def actualizar_lista(tabla):
         return
     
     for fila in hoja_registros.iter_rows(min_row=2, max_row=hoja_registros.max_row):
-        if fila[1].value and fila[3].value is None:
+        if fila[1].value and fila[4].value is None:  # Mostrar solo los no entregados
             id_producto = fila[0].value
-            fila_estandar = buscar_estandar(id_producto, hoja_estandares)
-            fecha_caducidad = fila_estandar[2].value if fila_estandar and len(fila_estandar) > 2 else "N/A"
-            tabla.insert('', 'end', values=(id_producto, fila[1].value, fila[2].value, str(fecha_caducidad)))
+            codigo_producto = fila[1].value
+            fecha_retiro = fila[2].value
+            empleado_retiro = fila[3].value
+            tabla.insert('', 'end', values=(id_producto, codigo_producto, fecha_retiro, empleado_retiro))
 
 # Función al escanear estándar
 def escanear_estandar():
@@ -64,15 +65,16 @@ def escanear_estandar():
         return
 
     producto = fila_estandar[1].value
+    codigo = fila_estandar[0].value
     for fila in hoja_registros.iter_rows(min_row=2, max_row=hoja_registros.max_row):
-        if fila[0].value == producto and fila[3].value is None:
-            fila[3].value = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            fila[4].value = empleado
-            estado_label.config(text="Estándar entregado correctamente.", fg="green")
+        if fila[0].value == producto and fila[4].value is None:
+            fila[4].value = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            fila[5].value = empleado
+            estado_label.config(text="Estándar entregado", fg="green")
             break
     else:
-        hoja_registros.append([producto, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), empleado, None, None])
-        estado_label.config(text="Estándar retirado correctamente.", fg="green")
+        hoja_registros.append([producto, codigo, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), empleado, None, None])
+        estado_label.config(text="Estándar retirado por Quimico", fg="green")
     
     try:
         wb.save(archivo_excel)
@@ -86,7 +88,7 @@ def escanear_estandar():
 
 # Configurar ventana principal
 ventana = tk.Tk()
-ventana.title("Sistema de Gestión de Estándares")
+ventana.title("Sistema de Gestión de Estándares Laboratorio Desarrollo Analitico")
 ventana.geometry("1200x768")
 
 # Etiquetas y campos de texto
@@ -109,19 +111,19 @@ estado_label.pack(pady=10)
 tk.Label(ventana, text="Estándares en uso:", font=("Arial", 16, "bold")).pack(pady=10)
 
 # Crear Treeview
-lista_estandares = ttk.Treeview(ventana, columns=('ID Producto', 'Fecha Retiro', 'Empleado', 'Fecha Caducidad'), show='headings')
+lista_estandares = ttk.Treeview(ventana, columns=('ID Producto', 'Código', 'Fecha Retiro', 'Empleado Retiro'), show='headings')
 
 # Configurar encabezados
-lista_estandares.heading('ID Producto', text='Estandar')
+lista_estandares.heading('ID Producto', text='Estándar')
+lista_estandares.heading('Código', text='Código')
 lista_estandares.heading('Fecha Retiro', text='Fecha Retiro')
-lista_estandares.heading('Empleado', text='Empleado')
-lista_estandares.heading('Fecha Caducidad', text='Fecha Caducidad')
+lista_estandares.heading('Empleado Retiro', text='Quimicos con Estandar en uso')
 
 # Configurar ancho de columnas
-lista_estandares.column('ID Producto', width=150, anchor='center')
+lista_estandares.column('ID Producto', width=200, anchor='center')
+lista_estandares.column('Código', width=200, anchor='center')
 lista_estandares.column('Fecha Retiro', width=200, anchor='center')
-lista_estandares.column('Empleado', width=200, anchor='center')
-lista_estandares.column('Fecha Caducidad', width=200, anchor='center')
+lista_estandares.column('Empleado Retiro', width=200, anchor='center')
 
 lista_estandares.pack(pady=20, padx=20, fill=tk.BOTH, expand=True)
 
